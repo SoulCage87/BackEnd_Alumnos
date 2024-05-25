@@ -25,4 +25,6 @@ SELECT
                        asignatura
                        INNER JOIN 
                        alumno ON asignatura.idAlumno = alumno.id 
-                       WHERE alumno.id = 3
+                       WHERE alumno.id = 2
+
+SELECT * FROM asignatura

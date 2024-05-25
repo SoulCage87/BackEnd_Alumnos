@@ -1,6 +1,4 @@
 import express from 'express'
-import bodyParser from 'body-parser'
-import { Sequelize } from 'sequelize'
 import sequelize from './config/database.js'
 import Alumno from './models/Alumno.js'
 import Asignatura from './models/Asignatura.js'
@@ -68,6 +66,7 @@ app.get('/asignatura/:idAlumno', async (req, res) => {
         const idAlumno = req.params.idAlumno
 
         const sql = `SELECT  
+                       asignatura.id as ID,
                        asignatura.nombreA AS asignatura_nombre,
                        alumno.nombre AS alumno_nombre,
                        alumno.apellido AS alumno_apellido
@@ -87,25 +86,39 @@ app.get('/asignatura/:idAlumno', async (req, res) => {
     }
 })
 
-app.post('/asignatura', async (req,res) => {
+app.post('/asignatura', async (req, res) => {
     try {
-        const {nombreA, idAlumno} = req.body
+        const { nombreA, idAlumno } = req.body;
 
-        const params = [nombreA, idAlumno]
+        const sql = `
+            INSERT INTO asignatura (nombreA, idAlumno)
+            VALUES (:nombreA, :idAlumno)
+        `;
 
-        const sql = `INSERT INTO asignatura
-                     (nombreA, idAlumno)
-                     VALUES
-                     ($1, $2)
-                     RETURNING *`
+        const [results] = await sequelize.query(sql, {
+            replacements: { nombreA, idAlumno },
+            type: sequelize.QueryTypes.INSERT
+        });
 
-                     const [results] = await sequelize.query(sql,params);
-
-                     res.json(results);
+        res.status(201).json({ message: 'Asignatura creada correctamente', results });
     } catch (error) {
-        res.status(400).send(error);
-    } 
-})
+        res.status(400).send(error.message);
+    }
+});
+
+app.delete('/asignatura/:id', async (req, res) => {
+    try {
+        const id = req.params.id  
+    const item = await Asignatura.findByPk(id)
+    if(!item){
+      return res.status(404).send('item no found ')
+    }
+  await item.destroy()
+  res.status(200).send('Item deleted');
+    } catch (error) {
+        res.status(400).send(error.message)
+    }
+});
 
 
 app.listen(port, () => {
